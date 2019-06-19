@@ -1,9 +1,8 @@
 from login import Login
 from lineup import LineUp
+from lineup import FORMATION_442
 from config import Config
 from biwengerApiClient import BiwengerApiClient
-
-FORMATION = [1, 4, 4, 2]
 
 
 def main():
@@ -11,8 +10,8 @@ def main():
     print(config.get_param('Wave', 'init.message'))
     cli = do_login(config)
     wave_api(cli)
-    lineup_player_ids = LineUp.get_player_ids_to_lineup(cli, FORMATION)
-    LineUp.set_lineup(cli, FORMATION, lineup_player_ids)
+    LineUp.set_best_lineup(cli)
+    #LineUp.set_best_lineup_for_formation(cli, FORMATION_442)
 
 
 def wave_api(cli):
