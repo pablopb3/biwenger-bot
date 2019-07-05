@@ -22,62 +22,67 @@ ALL_POSSIBLE_FORMATIONS = [
 
 class LineUp:
 
-    def __init__(self, formation, playerIds):
+    def __init__(self, cli, formation=None, player_ids=None):
+        self.cli = cli
         self.formation = formation
-        self.playersID = playerIds
+        self.player_ids = player_ids
 
-    @staticmethod
-    def set_best_lineup_for_formation(cli, formation):
-        player_ids = LineUp.get_best_lineup_for_formation(cli, formation)
-        return LineUp.set_lineup(cli, formation, player_ids)
+    def set_best_lineup(self):
+        lineup = self.get_best_lineup()
+        return self.set_lineup(lineup.formation, lineup.player_ids)
 
-    @staticmethod
-    def set_best_lineup(cli):
-        lineup = LineUp.get_best_lineup(cli)
-        return LineUp.set_lineup(cli, lineup.formation, lineup.playersID)
+    def get_best_lineup(self):
+        player_ids = self.get_my_player_ids()
+        players = Player.get_players_from_player_ids(self.cli, player_ids)
+        players = self.filter_players_ok(players)
+        self.order_players_by_points(players)
+        return self.get_best_lineup_from_ordered_players(players)
 
-    @staticmethod
-    def get_best_lineup_for_formation(cli, formation):
-        player_ids = LineUp.get_my_player_ids(cli)
-        players = LineUp.get_players_from_player_ids(cli, player_ids)
-        players_by_pos = LineUp.get_players_by_pos(players)
-        return LineUp.get_best_lineup_player_ids_by_formation(players_by_pos, formation)
+    def get_my_player_ids(self):
+        resp = self.cli.do_get("getMyPlayers")
+        return resp["data"]
 
-    @staticmethod
-    def get_best_lineup(cli):
-        player_ids = LineUp.get_my_player_ids(cli)
-        players = LineUp.get_players_from_player_ids(cli, player_ids)
-        players = LineUp.filter_players_ok(players)
-        LineUp.order_players_by_points(players)
-        return LineUp.get_best_lineup_from_ordered_players(players)
+    def filter_players_ok(self, players):
+        return [p for p in players if p.status == "ok"]
 
-    @staticmethod
-    def get_best_lineup_from_ordered_players(ordered_players):
+    def order_players_by_points(self, players):
+        return players.sort(key=lambda x: (x.points, x.points_last_season), reverse=True)
+
+    def get_best_lineup_from_ordered_players(self, ordered_players):
         players_by_pos = {}
         possible_formations = ALL_POSSIBLE_FORMATIONS
         for player in ordered_players:
-            if LineUp.is_player_fitable_in_lineup(player.position, players_by_pos, possible_formations):
+            if self.is_player_fitable_in_lineup(player.position, players_by_pos, possible_formations):
                 players_by_pos.setdefault(player.position, []).append(player)
-                possible_formations = LineUp.erase_impossible_formations(players_by_pos, possible_formations)
+                possible_formations = self.erase_impossible_formations(players_by_pos, possible_formations)
         return LineUp(
+            self.cli,
             globals()
             ['FORMATION_'
              + str(players_by_pos[2].__len__())
              + str(players_by_pos[3].__len__())
              + str(players_by_pos[4].__len__())],
-            LineUp.get_player_ids_from_selected_players_dict(players_by_pos)
+            self.get_player_ids_from_selected_players_dict(players_by_pos)
         )
 
-    @staticmethod
-    def get_player_ids_from_selected_players_dict(selected_players_dict):
+    def get_best_lineup_for_formation(self, formation):
+        player_ids = self.get_my_player_ids()
+        players = self.get_players_from_player_ids(player_ids)
+        players_by_pos = self.get_players_by_pos(players)
+        return self.get_best_lineup_player_ids_by_formation(players_by_pos, formation)
+
+    def set_best_lineup_for_formation(self, formation):
+        player_ids = self.get_best_lineup_for_formation(formation)
+        return self.set_lineup(formation, player_ids)
+
+    def get_player_ids_from_selected_players_dict(self, selected_players_dict):
         dictlist = []
         for pos, players in selected_players_dict.items():
             for player in players:
                 dictlist.append(player.id)
         return dictlist
 
-    @staticmethod
-    def is_player_fitable_in_lineup(player_position, players_by_pos, possible_formations):
+    def is_player_fitable_in_lineup(self, player_position, players_by_pos, possible_formations):
         for formation in possible_formations:
             if player_position not in players_by_pos:
                 return True
@@ -85,12 +90,10 @@ class LineUp:
                 return True
         return False
 
-    @staticmethod
-    def erase_impossible_formations(players_by_pos, possible_formations):
-        return [x for x in possible_formations if not LineUp.should_erase_formation(x, players_by_pos)]
+    def erase_impossible_formations(self, players_by_pos, possible_formations):
+        return [x for x in possible_formations if not self.should_erase_formation(x, players_by_pos)]
 
-    @staticmethod
-    def should_erase_formation(formation, players_by_pos):
+    def should_erase_formation(self, formation, players_by_pos):
         for i in range(1, 5):
             if i not in players_by_pos:
                 continue
@@ -98,52 +101,29 @@ class LineUp:
                 return True
         return False
 
-    @staticmethod
-    def filter_players_ok(players):
-        return [p for p in players if p.status == "ok"]
-
-    @staticmethod
-    def order_players_by_points(players):
-        return players.sort(key=lambda x: x.points, reverse=True)
-
-    @staticmethod
-    def set_lineup(cli, formation, lineup_player_ids):
+    def set_lineup(self, formation, lineup_player_ids):
         biwenger_line_up = BiwengerLineUp(formation, lineup_player_ids)
-        cli.do_post("setLineUp", biwenger_line_up)
+        self.cli.do_post("setLineUp", biwenger_line_up)
 
-    @staticmethod
-    def get_my_player_ids(cli):
-        resp = cli.do_get("getMyPlayers")
-        return resp["data"]
-
-    @staticmethod
-    def get_players_from_player_ids(cli, player_ids):
-        players = []
-        for player_id in player_ids:
-            player = Player(cli.do_get("getPlayerById", {"id": player_id}))
-            players.append(player)
-        return players
-
-    @staticmethod
-    def get_players_by_pos(players):
+    def get_players_by_pos(self, players):
         players_by_pos = {}
         for player in players:
             players_by_pos.setdefault(player.position, []).append(player)
         return collections.OrderedDict(sorted(players_by_pos.items()))
 
-    @staticmethod
-    def get_best_lineup_player_ids_by_formation(players_by_pos, formation):
+    def get_best_lineup_player_ids_by_formation(self, players_by_pos, formation):
         lineup_players = []
         for key, players in players_by_pos.items():
-            players = LineUp.filter_players_ok(players)
-            LineUp.order_players_by_points(players)
+            players = self.filter_players_ok(players)
+            self.order_players_by_points(players)
             lineup_players.extend(players[:formation[key - 1]])
         lineup_player_ids = [p.id for p in lineup_players]
         return lineup_player_ids
 
+
 class BiwengerLineUp:
 
-    def __init__(self, formation, playerIds):
+    def __init__(self, formation, player_ids):
         del formation[0]
         self.type = '-'.join([str(i) for i in formation])
-        self.playersID = playerIds
+        self.playersID = player_ids

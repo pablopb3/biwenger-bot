@@ -1,4 +1,3 @@
-
 class Player:
 
     def __init__(self, data):
@@ -13,6 +12,10 @@ class Player:
     def __str__(self):
         return self.name
 
-
-
-
+    @staticmethod
+    def get_players_from_player_ids(cli, player_ids):
+        players = []
+        for player_id in player_ids:
+            player = Player(cli.do_get("getPlayerById", {"id": player_id}))
+            players.append(player)
+        return players
