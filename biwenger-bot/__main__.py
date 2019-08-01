@@ -4,19 +4,24 @@ from lineup import LineUp
 from lineup import FORMATION_442
 from config import Config
 from biwengerApiClient import BiwengerApiClient
-
+from prices_predictor import PricesPredictor
+from player import Player
 
 def main():
     config = Config()
     wave(config)
     cli = do_login(config)
-    market = Market(cli)
     line_up = LineUp(cli)
+    line_up.set_best_lineup()
+    config.update_players_alias(cli)
+    market = Market(cli)
+    #market.study_offers_for_my_players()
+    market.place_offers_for_players_in_market()
     wave_api(cli)
 
     print("======== ======== CONFIG BUSINESS STARTED ======== ========")
     print("======== Getting all alias information from players in league ========")
-    config.update_players_alias(cli)
+
     print("======== All alias information from players got ========")
     print("======== ======== CONFIG BUSINESS ENDED ======== ========")
 
@@ -25,13 +30,12 @@ def main():
     market.place_all_my_players_to_market(125)
     print("======== All my players on sale on market ========")
     print("======== Placing offers at players in market ========")
-    market.place_offers_for_players_in_market()
+
     print("======== Offers placed to players in market ========")
     print("======== ======== MARKET BUSINESS ENDED ======== ========")
 
     print("======== ======== LINEUP BUSINESS STARTED ======== ========")
     print("======== Starting to set best possible line up ========")
-    line_up.set_best_lineup()
     print("======== Best possible line up set ========")
     print("======== ======== LINEUP BUSINESS ENDED ======== ========")
 

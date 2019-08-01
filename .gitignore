@@ -1,3 +1,4 @@
 .idea
 bot_local.ini
 *pyc
+venv/

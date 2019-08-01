@@ -31,9 +31,12 @@ class LineUp:
         lineup = self.get_best_lineup()
         return self.set_lineup(lineup.formation, lineup.player_ids)
 
-    def get_best_lineup(self):
+    def get_my_players(self):
         player_ids = self.get_my_player_ids()
-        players = Player.get_players_from_player_ids(self.cli, player_ids)
+        return Player.get_players_from_player_ids(self.cli, player_ids)
+
+    def get_best_lineup(self):
+        players = self.get_my_players()
         players = self.filter_players_ok(players)
         self.order_players_by_points(players)
         return self.get_best_lineup_from_ordered_players(players)
@@ -47,6 +50,9 @@ class LineUp:
 
     def order_players_by_points(self, players):
         return players.sort(key=lambda x: (x.points, x.points_last_season), reverse=True)
+
+    def order_players_by_position(self, players):
+        return players.sort(key=lambda x: x.position)
 
     def get_best_lineup_from_ordered_players(self, ordered_players):
         players_by_pos = {}
@@ -77,7 +83,8 @@ class LineUp:
 
     def get_player_ids_from_selected_players_dict(self, selected_players_dict):
         dictlist = []
-        for pos, players in selected_players_dict.items():
+        selected_players_dict
+        for pos, players in sorted(selected_players_dict.items()):
             for player in players:
                 dictlist.append(player.id)
         return dictlist
