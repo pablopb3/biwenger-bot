@@ -1,0 +1,17 @@
+version: '3.5'
+services:
+   biwenger-bot:
+      build: .
+      image: pablopb3/biwenger-bot
+      container_name: biwenger-bot
+      restart: always
+      networks:
+        - biwenger-network
+      expose:
+         - 8010
+      ports:
+         - "8010:8010"
+networks:
+   biwenger-network:
+      name: biwenger-network
+      driver: bridge
