@@ -15,7 +15,7 @@ def main():
     line_up = LineUp(cli)
     line_up.set_best_lineup()
     market = Market(cli)
-    #market.study_offers_for_my_players()
+    market.study_offers_for_my_players()
     market.place_offers_for_players_in_market()
     wave_api(cli)
 

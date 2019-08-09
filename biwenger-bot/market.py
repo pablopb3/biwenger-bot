@@ -41,6 +41,8 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player_price, predicted_price, offer_price):
+        if predicted_price < 0.85*player_price and offer_price > player_price:
+            return True
         return False
 
     def should_place_offer(self, player_price, predicted_price):
