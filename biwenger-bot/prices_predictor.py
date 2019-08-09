@@ -18,8 +18,8 @@ class PricesPredictor:
         prices = [x[1] for x in player.prices][-self.days_to_lookback:-1]
         x = np.reshape(x, (len(x), 1))
         dates = np.reshape(dates,(len(dates), 1)) # converting to matrix of n X 1
-        svr_rbf = SVR(kernel='rbf', C=1e4, gamma=0.01)  # TODO THIS SHOULD 5e7 defining the support vector regression models
-        svr_poly = SVR(kernel='poly', C=1e6, degree=1, gamma='auto') #TODO DEGREE SHOULD BE 1e8 y 2
+        svr_rbf = SVR(kernel='rbf', C=5e7, gamma=0.01)
+        svr_poly = SVR(kernel='poly', C=1e8, degree=2, gamma='auto')
         svr_rbf.fit(dates, prices)  # fitting the data points in the models
         svr_poly.fit(dates, prices)
 

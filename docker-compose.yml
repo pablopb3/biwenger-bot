@@ -4,7 +4,6 @@ services:
       build: .
       image: pablopb3/biwenger-bot
       container_name: biwenger-bot
-      restart: always
       networks:
         - biwenger-network
       expose:
