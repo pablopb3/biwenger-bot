@@ -49,7 +49,9 @@ class Market:
         return predicted_price > 1.15*player_price and player_price < 5000000
 
     def calculate_bid_price(self, player_price, predicted_price):
-        return int((predicted_price+player_price)/2)
+        diff_price = predicted_price - player_price
+        corrected_diff_price = diff_price*0.3
+        return int(player_price + corrected_diff_price)
 
     def accept_offer(self, offer_id):
         return self.cli.do_get("acceptReceivedOffer?id=" + offer_id)["data"]
