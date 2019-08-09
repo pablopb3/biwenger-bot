@@ -46,7 +46,7 @@ class Market:
         return False
 
     def should_place_offer(self, player_price, predicted_price):
-        return predicted_price > player_price
+        return predicted_price > 1.15*player_price and player_price < 5000000
 
     def calculate_bid_price(self, player_price, predicted_price):
         return int((predicted_price+player_price)/2)
