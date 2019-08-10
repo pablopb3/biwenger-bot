@@ -19,7 +19,7 @@ class PricesPredictor:
         x = np.reshape(x, (len(x), 1))
         dates = np.reshape(dates,(len(dates), 1)) # converting to matrix of n X 1
         svr_rbf = SVR(kernel='rbf', C=5e7, gamma=0.01)
-        svr_poly = SVR(kernel='poly', C=1e8, degree=2, gamma='auto')
+        svr_poly = SVR(kernel='poly', C=1e6, degree=2, gamma='auto')
         svr_rbf.fit(dates, prices)  # fitting the data points in the models
         svr_poly.fit(dates, prices)
 
