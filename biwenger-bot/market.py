@@ -30,10 +30,12 @@ class Market:
             for received_offer in self.received_offers_from_computer:
                 player_id = received_offer["idPlayer"]
                 player = Player.get_player_from_player_id(self.cli, player_id)
+                print("studying to accept offer for " + player.name)
                 current_price = player.price
                 prediction_price = self.prices_predictor.predict_price(player)
                 offer_price = received_offer["ammount"]
                 if self.should_accept_offer(current_price, prediction_price, offer_price):
+                    print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
                     self.accept_offer(received_offer["idOffer"])
 
     def place_all_my_players_to_market(self, price):
@@ -41,12 +43,12 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player_price, predicted_price, offer_price):
-        if predicted_price < 0.85*player_price and offer_price > player_price:
+        if predicted_price < 0.9*player_price and offer_price > player_price:
             return True
         return False
 
     def should_place_offer(self, player_price, predicted_price):
-        return predicted_price > 1.15*player_price and player_price < 5000000
+        return predicted_price > 1.08*player_price and player_price < 5000000
 
     def calculate_bid_price(self, player_price, predicted_price):
         diff_price = predicted_price - player_price
@@ -54,7 +56,7 @@ class Market:
         return int(player_price + corrected_diff_price)
 
     def accept_offer(self, offer_id):
-        return self.cli.do_get("acceptReceivedOffer?id=" + offer_id)["data"]
+        return self.cli.do_get("acceptReceivedOffer?id=" + str(offer_id))["data"]
 
     def place_offer(self, player_id, bid_price):
         offer = PlaceOffer(bid_price, [player_id], None, "purchase")

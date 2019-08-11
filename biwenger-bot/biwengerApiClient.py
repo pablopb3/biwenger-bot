@@ -19,10 +19,10 @@ class BiwengerApiClient:
 
     def do_get(self, endpoint, params=None):
         resp = requests.get(self.BASEURL + endpoint, params=params, headers=self.headers).json()
-        print(resp)
+        #print(resp)
         return resp
 
     def do_post(self, endpoint, data):
         resp = requests.post(self.BASEURL + endpoint, data=json.dumps(data.__dict__), headers=self.headers).json()
-        print(resp)
+        #print(resp)
         return resp
