@@ -14,3 +14,4 @@ networks:
    biwenger-network:
       name: biwenger-network
       driver: bridge
+      external: true

@@ -11,35 +11,40 @@ def main():
     config = Config()
     wave(config)
     cli = do_login(config)
-    config.update_players_alias(cli)
-    line_up = LineUp(cli)
-    line_up.set_best_lineup()
-    market = Market(cli)
-    market.study_offers_for_my_players()
-    market.place_offers_for_players_in_market()
     wave_api(cli)
 
     print("======== ======== CONFIG BUSINESS STARTED ======== ========")
     print("======== Getting all alias information from players in league ========")
-
+    config.update_players_alias(cli)
     print("======== All alias information from players got ========")
     print("======== ======== CONFIG BUSINESS ENDED ======== ========")
 
-    print("======== ======== MARKET BUSINESS STARTED ======== ========")
-    print("======== Sending all my players to market ========")
-    market.place_all_my_players_to_market(125)
-    print("======== All my players on sale on market ========")
-    print("======== Placing offers at players in market ========")
-
-    print("======== Offers placed to players in market ========")
-    print("======== ======== MARKET BUSINESS ENDED ======== ========")
-
     print("======== ======== LINEUP BUSINESS STARTED ======== ========")
+    line_up = LineUp(cli)
     print("======== Starting to set best possible line up ========")
+    try:
+        line_up.set_best_lineup()
+    except Exception as e:
+        print("An error ocurred while setting the best lineup: " + str(e))
     print("======== Best possible line up set ========")
     print("======== ======== LINEUP BUSINESS ENDED ======== ========")
 
-    # LineUp.set_best_lineup_for_formation(cli, FORMATION_442)
+    print("======== ======== MARKET BUSINESS STARTED ======== ========")
+    market = Market(cli, line_up)
+
+    print("======== Sending all my players to market ========")
+    market.place_all_my_players_to_market(500)
+    print("======== All my players on sale on market ========")
+
+    print("======== Studying received offers for my players ========")
+    market.study_offers_for_my_players()
+    print("======== All the received offers were studied ========")
+
+    print("======== Placing offers at players in market ========")
+    market.place_offers_for_players_in_market()
+    print("======== Offers placed to players in market ========")
+
+    print("======== ======== MARKET BUSINESS ENDED ======== ========")
 
 
 def wave_api(cli):

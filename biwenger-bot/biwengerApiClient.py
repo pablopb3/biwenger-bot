@@ -14,6 +14,7 @@ class BiwengerApiClient:
         login = Login(email, password)
         resp = self.do_post('login', login)
         token = resp["data"]["login"]["token"]
+        print("Login succesffully done for " + email)
         self.token = token
         self.headers = {'Authorization': 'Bearer ' + self.token}
 

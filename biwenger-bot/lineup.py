@@ -19,6 +19,8 @@ ALL_POSSIBLE_FORMATIONS = [
     FORMATION_541
 ]
 
+MIN_PLAYERS_BY_POS = [1, 5, 5, 3]
+
 
 class LineUp:
 
@@ -37,8 +39,7 @@ class LineUp:
 
     def get_best_lineup(self):
         players = self.get_my_players()
-        players = self.filter_players_ok(players)
-        self.order_players_by_points(players)
+        self.order_players_by_bot_points(players)
         return self.get_best_lineup_from_ordered_players(players)
 
     def get_my_player_ids(self):
@@ -48,8 +49,8 @@ class LineUp:
     def filter_players_ok(self, players):
         return [p for p in players if p.status == "ok"]
 
-    def order_players_by_points(self, players):
-        return players.sort(key=lambda x: (x.points, x.points_last_season), reverse=True)
+    def order_players_by_bot_points(self, players):
+        return players.sort(key=lambda x: x.bot_points, reverse=True)
 
     def order_players_by_position(self, players):
         return players.sort(key=lambda x: x.position)
@@ -61,13 +62,16 @@ class LineUp:
             if self.is_player_fitable_in_lineup(player.position, players_by_pos, possible_formations):
                 players_by_pos.setdefault(player.position, []).append(player)
                 possible_formations = self.erase_impossible_formations(players_by_pos, possible_formations)
+        formation = "{0}{1}{2}".\
+            format(str(players_by_pos[2].__len__()),
+                   str(players_by_pos[3].__len__()),
+                   str(players_by_pos[4].__len__()))
+        formation_const = 'FORMATION_' + formation
+        #print("Line up decided : " + formation + ". ")
+        #print(', '.join(players_by_pos.name))
         return LineUp(
             self.cli,
-            globals()
-            ['FORMATION_'
-             + str(players_by_pos[2].__len__())
-             + str(players_by_pos[3].__len__())
-             + str(players_by_pos[4].__len__())],
+            globals()[formation_const],
             self.get_player_ids_from_selected_players_dict(players_by_pos)
         )
 
@@ -122,7 +126,7 @@ class LineUp:
         lineup_players = []
         for key, players in players_by_pos.items():
             players = self.filter_players_ok(players)
-            self.order_players_by_points(players)
+            self.order_players_by_bot_points(players)
             lineup_players.extend(players[:formation[key - 1]])
         lineup_player_ids = [p.id for p in lineup_players]
         return lineup_player_ids
