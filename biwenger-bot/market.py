@@ -50,12 +50,12 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player, predicted_price, offer_price):
-        if predicted_price < 0.9 * player.price and offer_price > player.price:
+        if predicted_price is not None and predicted_price < 0.9 * player.price and offer_price > player.price:
             return True
         return False
 
     def should_place_offer(self, player_price, predicted_price):
-        return predicted_price > 1.05 * player_price and player_price < 5000000
+        return predicted_price is not None and predicted_price > 1.05 * player_price and player_price < 5000000
 
     def calculate_bid_price(self, player_price, predicted_price):
         diff_price = predicted_price - player_price
