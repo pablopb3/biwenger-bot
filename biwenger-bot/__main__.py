@@ -6,8 +6,10 @@ from config import Config
 from biwengerApiClient import BiwengerApiClient
 from prices_predictor import PricesPredictor
 from player import Player
+import datetime
 
 def main():
+    print("~~~~~~~~~~~ STARTING EXECUTION FOR DAY " + get_formated_time() + "~~~~~~~~~~~")
     config = Config()
     wave(config)
     cli = do_login(config)
@@ -45,7 +47,7 @@ def main():
     print("======== Offers placed to players in market ========")
 
     print("======== ======== MARKET BUSINESS ENDED ======== ========")
-
+    print("~~~~~~~~~~~ ENDED EXECUTION FOR DAY " + get_formated_time() + "~~~~~~~~~~~")
 
 def wave_api(cli):
     cli.do_get("")
@@ -61,6 +63,8 @@ def do_login(config):
         config.get_param('Credentials', 'biwenger.pass'),
     )
 
+def get_formated_time():
+    return datetime.datetime.now().strftime('%d-%b-%G at %H:%M:%S')
 
 if __name__ == '__main__':
     main()

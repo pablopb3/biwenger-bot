@@ -1,8 +1,10 @@
 from player import Player
+import math
 from lineup import LineUp
 from prices_predictor import PricesPredictor
 from lineup import MIN_PLAYERS_BY_POS
 
+MAX_MONEY_AT_BANK = 20000000
 
 class Market:
 
@@ -20,6 +22,13 @@ class Market:
         self.available_money = self.get_my_money()
         self.max_bid = self.get_max_bid()
         self.market_evolution = self.get_market_evolution()
+        self.bided_today = 0
+        self.buying_aggressivity = self.calculate_buying_aggressivity()
+        self.selling_aggressivity = 10 - self.buying_aggressivity
+        self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity*500000
+        self.min_percentage_to_bid_for_player = 1.05-self.buying_aggressivity*0.02/10
+        self.percentage_to_set_bid_price = 0.2+self.buying_aggressivity/10
+        self.percentage_to_accept_offer = 0.88+self.selling_aggressivity*0.04/10
 
     def place_offers_for_players_in_market(self):
         for player_in_market in self.players_in_market_from_computer:
@@ -28,8 +37,9 @@ class Market:
             predicted_price = self.prices_predictor.predict_price(player_in_market)
             if self.should_place_offer(player_price, predicted_price):
                 bid_price = self.calculate_bid_price(player_price, predicted_price)
-                print("decided to make a bid for " + player_in_market.name + " for " + str(bid_price) + "$")
-                self.place_offer(player_in_market.id, bid_price)
+                if self.do_i_have_money_to_bid(bid_price):
+                    print("decided to make a bid for " + player_in_market.name + " for " + str(bid_price) + "$")
+                    self.place_offer(player_in_market.id, bid_price)
 
     def study_offers_for_my_players(self):
         if self.received_offers_from_computer:
@@ -50,16 +60,16 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player, predicted_price, offer_price):
-        if predicted_price is not None and predicted_price < 0.9 * player.price and offer_price > player.price:
+        if predicted_price is not None and predicted_price < self.percentage_to_accept_offer * player.price and offer_price > player.price:
             return True
         return False
 
     def should_place_offer(self, player_price, predicted_price):
-        return predicted_price is not None and predicted_price > 1.05 * player_price and player_price < 5000000
+        return predicted_price is not None and predicted_price > self.min_percentage_to_bid_for_player * player_price and player_price < self.max_player_price_to_bid_for
 
     def calculate_bid_price(self, player_price, predicted_price):
         diff_price = predicted_price - player_price
-        corrected_diff_price = diff_price * 0.3
+        corrected_diff_price = diff_price * self.percentage_to_set_bid_price
         return int(player_price + corrected_diff_price)
 
     def accept_offer(self, offer_id):
@@ -67,7 +77,8 @@ class Market:
 
     def place_offer(self, player_id, bid_price):
         offer = PlaceOffer(bid_price, [player_id], None, "purchase")
-        return self.cli.do_post("placeOffer", offer)["data"]
+        self.cli.do_post("placeOffer", offer)["data"]
+        self.bided_today += bid_price
 
     def is_min_players_by_pos_guaranteed(self, player: Player):
         players_in_this_pos = len(self.my_players_by_pos[player.position])
@@ -79,6 +90,15 @@ class Market:
             return False
         return True
 
+    def calculate_buying_aggressivity(self):
+        buy_aggr_by_money = self.available_money/MAX_MONEY_AT_BANK*10
+        buy_aggr_by_days = round(math.cos(4*self.days_to_next_round/(2*math.pi)),2)
+        if self.days_to_next_round > 10:
+            buy_aggr_by_days = 1
+        buy_aggr = round(buy_aggr_by_money + buy_aggr_by_days)
+        return buy_aggr
+
+
     def get_days_to_next_round(self):
         return self.cli.do_get("getDaysToNextRound")["data"]
 
@@ -89,6 +109,9 @@ class Market:
         received_offers = self.get_received_offers()
         if received_offers is not None:
             return [x for x in received_offers if x["idUser"] == 0]
+
+    def do_i_have_money_to_bid(self, bid_price):
+        return self.available_money - self.bided_today - bid_price > 0
 
     def get_players_ids_from_players_in_market_from_computer(self):
         return [p['idPlayer'] for p in self.get_players_in_market_from_computer_with_price()]
