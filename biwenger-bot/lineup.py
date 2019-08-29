@@ -39,7 +39,7 @@ class LineUp:
 
     def get_best_lineup(self):
         players = self.get_my_players()
-        self.order_players_by_bot_points(players)
+        self.order_players_by_lineup_points(players)
         return self.get_best_lineup_from_ordered_players(players)
 
     def get_my_player_ids(self):
@@ -49,8 +49,8 @@ class LineUp:
     def filter_players_ok(self, players):
         return [p for p in players if p.status == "ok"]
 
-    def order_players_by_bot_points(self, players):
-        return players.sort(key=lambda x: x.bot_points, reverse=True)
+    def order_players_by_lineup_points(self, players):
+        return players.sort(key=lambda x: x.lineup_points, reverse=True)
 
     def order_players_by_position(self, players):
         return players.sort(key=lambda x: x.position)
@@ -126,7 +126,7 @@ class LineUp:
         lineup_players = []
         for key, players in players_by_pos.items():
             players = self.filter_players_ok(players)
-            self.order_players_by_bot_points(players)
+            self.order_players_by_lineup_points(players)
             lineup_players.extend(players[:formation[key - 1]])
         lineup_player_ids = [p.id for p in lineup_players]
         return lineup_player_ids

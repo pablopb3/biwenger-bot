@@ -29,7 +29,12 @@ class Player:
         self.points_mean = self.get_points_mean(self.points, self.played_matches)
         self.points_mean_home = self.points_home/self.played_home if self.played_home > 0 else 0
         self.points_mean_away = self.points_away/self.played_away if self.played_away > 0 else 0
-        self.bot_points = Player.get_bot_points_for_player(self)
+        self.points_mean_per_million = round(self.points_mean/self.price*1000000, 4)
+
+        self.lineup_points = Player.get_lineup_points_for_player(self)
+        self.buying_points = None
+        self.selling_points = None
+
 
     def __str__(self):
         return self.name
@@ -61,16 +66,16 @@ class Player:
 
 
     @staticmethod
-    def get_bot_points_for_player(player):
+    def get_lineup_points_for_player(player):
         if player.status == 'ok':
-            return Player.get_bot_points_player_ok(player)
+            return Player.get_lineup_points_player_ok(player)
         elif player.status == 'doubt':
             return -0.5
         elif player.status == 'injured' or 'suspended':
             return -1
 
     @staticmethod
-    def get_bot_points_player_ok(player):
+    def get_lineup_points_player_ok(player):
         normalized_price = Player.normalize_price(player.price)
         normalized_points = Player.normalize_points_mean(player.points_mean)
         normalized_points_home_away = Player.get_normalized_points_home_away(player)
@@ -104,3 +109,4 @@ class Player:
         if player.next_match_home:
             normalized_points_home_away = normalized_points_home_away*1.15
         return normalized_points_home_away
+
