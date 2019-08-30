@@ -12,8 +12,9 @@ class Market:
 
     def __init__(self, cli, line_up):
         self.cli = cli
+        self.line_up = line_up
         self.prices_predictor = PricesPredictor()
-        self.my_squad = line_up.get_my_players()
+        self.my_squad = self.line_up.get_my_players()
         self.my_players_by_pos = line_up.get_players_by_pos(self.my_squad)
         self.min_players_by_pos = MIN_PLAYERS_BY_POS
         self.received_offers_from_computer = self.get_received_offers_from_computer()
@@ -44,6 +45,8 @@ class Market:
                 if self.do_i_have_money_to_bid(bid_price):
                     print("decided to make a bid for " + player_in_market.name + " for " + str(bid_price) + "$")
                     self.place_offer(player_in_market.id, bid_price)
+                    self.my_squad = self.line_up.get_my_players()
+
 
     def study_offers_for_my_players(self):
         if self.received_offers_from_computer:
@@ -59,6 +62,8 @@ class Market:
                 if self.should_accept_offer(player):
                     print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
                     self.accept_offer(received_offer["idOffer"])
+                    self.my_squad = self.Zline_up.get_my_players()
+
 
     def place_all_my_players_to_market(self, price):
         place_players_to_market = PlacePlayersToMarket(price)
