@@ -62,7 +62,7 @@ class Market:
                 if self.should_accept_offer(player):
                     print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
                     self.accept_offer(received_offer["idOffer"])
-                    self.my_squad = self.Zline_up.get_my_players()
+                    self.my_squad = self.line_up.get_my_players()
 
 
     def place_all_my_players_to_market(self, price):
