@@ -45,7 +45,7 @@ class Market:
                 if self.do_i_have_money_to_bid(bid_price):
                     print("decided to make a bid for " + player_in_market.name + " for " + str(bid_price) + "$")
                     self.place_offer(player_in_market.id, bid_price)
-                    self.my_squad = self.line_up.get_my_players()
+                    self.my_players_by_pos = self.line_up.get_players_by_pos(self.my_squad)
 
 
     def study_offers_for_my_players(self):
@@ -62,7 +62,7 @@ class Market:
                 if self.should_accept_offer(player):
                     print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
                     self.accept_offer(received_offer["idOffer"])
-                    self.my_squad = self.line_up.get_my_players()
+                    self.my_players_by_pos = self.line_up.get_players_by_pos(self.my_squad)
 
 
     def place_all_my_players_to_market(self, price):
@@ -125,9 +125,11 @@ class Market:
 
         normalized_points_mean = float(interp(player.points_mean, [0, self.team_points_mean, 10], [-100, 0, 100]))
 
-        return round(diff_price_weight * normalized_diff + \
+        buying_points = round(diff_price_weight * normalized_diff + \
                diff_points_per_million_weight * normalized_points_per_million + \
                diff_points_mean_weight * normalized_points_mean, 4)
+        print("buying points for " + player.name + ": " + str(buying_points))
+        return buying_points
 
     def get_days_to_next_round(self):
         return self.cli.do_get("getDaysToNextRound")["data"]
