@@ -114,13 +114,14 @@ class Market:
         return buy_aggr
 
     def get_buying_points(self, player: Player, predicted_price):
-        diff_price_weight = 0.7
+        diff_price_weight = 0.65
         diff_points_mean_weight = 0.2
-        diff_points_per_million_weight = 0.1
+        diff_points_per_million_weight = 0.15
         percentage_diff = (predicted_price - player.price) / player.price * 100
-        normalized_diff = min(max(((percentage_diff) ** 3) / 20, -100), 100)
+        normalized_diff = min(max(((percentage_diff) ** 3) / 25, -100), 100)
 
-        normalized_points_per_million = float(interp(player.points_mean_per_million, [0, self.team_points_mean_per_million, 10], [-100, 0, 100]))
+        player_millions_value = int(player.price/1000000)
+        normalized_points_per_million = float(interp(player.points_mean_per_million*(1.25**player_millions_value), [0, self.team_points_mean_per_million, 10], [-100, 0, 100]))
 
         normalized_points_mean = float(interp(player.points_mean, [0, self.team_points_mean, 10], [-100, 0, 100]))
 

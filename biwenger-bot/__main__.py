@@ -21,17 +21,8 @@ def main():
     print("======== All alias information from players got ========")
     print("======== ======== CONFIG BUSINESS ENDED ======== ========")
 
-    print("======== ======== LINEUP BUSINESS STARTED ======== ========")
-    line_up = LineUp(cli)
-    print("======== Starting to set best possible line up ========")
-    try:
-        line_up.set_best_lineup()
-    except Exception as e:
-        print("An error ocurred while setting the best lineup: " + str(e))
-    print("======== Best possible line up set ========")
-    print("======== ======== LINEUP BUSINESS ENDED ======== ========")
-
     print("======== ======== MARKET BUSINESS STARTED ======== ========")
+    line_up = LineUp(cli)
     market = Market(cli, line_up)
 
     print("======== Sending all my players to market ========")
@@ -47,6 +38,16 @@ def main():
     print("======== Offers placed to players in market ========")
 
     print("======== ======== MARKET BUSINESS ENDED ======== ========")
+
+    print("======== ======== LINEUP BUSINESS STARTED ======== ========")
+    line_up = LineUp(cli)
+    print("======== Starting to set best possible line up ========")
+    try:
+        line_up.set_best_lineup()
+    except Exception as e:
+        print("An error ocurred while setting the best lineup: " + str(e))
+    print("======== Best possible line up set ========")
+    print("======== ======== LINEUP BUSINESS ENDED ======== ========")
     print("~~~~~~~~~~~ ENDED EXECUTION FOR DAY " + get_formated_time() + "~~~~~~~~~~~")
 
 def wave_api(cli):

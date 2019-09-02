@@ -19,7 +19,7 @@ ALL_POSSIBLE_FORMATIONS = [
     FORMATION_541
 ]
 
-MIN_PLAYERS_BY_POS = [1, 5, 5, 3]
+MIN_PLAYERS_BY_POS = [1, 5, 4, 2]
 
 
 class LineUp:
