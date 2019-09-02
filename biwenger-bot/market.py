@@ -75,7 +75,11 @@ class Market:
         return False
 
     def should_place_offer(self, player):
-        return player.buying_points is not None and player.buying_points > self.min_buying_points_to_bid and player.price < self.max_player_price_to_bid_for
+        return \
+            player.status == "ok" and \
+            player.buying_points is not None and \
+            player.buying_points > self.min_buying_points_to_bid and \
+            player.price < self.max_player_price_to_bid_for
 
     def calculate_bid_price(self, player):
         player_millions_value = int(player.price/1000000)
