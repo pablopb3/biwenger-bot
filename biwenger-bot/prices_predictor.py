@@ -13,17 +13,18 @@ class PricesPredictor:
     #TODO MAKE TESTS WITH PAST VALUES AND TRY TO PREDICT THE RESULTS FROM THE CLOSE PAST
     def predict_price(self, player: Player):
         try:
-            x = [self.days_to_lookback + self.prediction_day]
-            dates = range(self.days_to_lookback)
-            prices = [x[1] for x in player.prices][-self.days_to_lookback:]
+            days_to_lookback = min(self.days_to_lookback, player.prices.__len__())
+            x = [days_to_lookback + self.prediction_day]
+            dates = range(days_to_lookback)
+            prices = [x[1] for x in player.prices][-days_to_lookback:]
             x = np.reshape(x, (len(x), 1))
-            dates = np.reshape(dates,(len(dates), 1)) # converting to matrix of n X 1
+            dates = np.reshape(dates, (len(dates), 1)) # converting to matrix of n X 1
             svr_rbf = SVR(kernel='rbf', C=5e7, gamma=0.01)
             #svr_poly = SVR(kernel='poly', C=1e8, degree=2, gamma='auto')
             svr_rbf.fit(dates, prices)  # fitting the data points in the models
             #svr_poly.fit(dates, prices)
 
-            dates_extended = range(self.days_to_lookback+5)
+            dates_extended = range(days_to_lookback+5)
             dates_extended = np.reshape(dates_extended,(len(dates_extended), 1)) # converting to matrix of n X 1
 
             plt.scatter(dates, prices, color='k', label='Data') # plotting the initial datapoints
