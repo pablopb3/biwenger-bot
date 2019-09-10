@@ -7,9 +7,9 @@ services:
       networks:
         - biwenger-network
       expose:
-         - 8010
+         - 8100
       ports:
-         - "8010:8010"
+         - "8100:8100"
 networks:
    biwenger-network:
       name: biwenger-network
