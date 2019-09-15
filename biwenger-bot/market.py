@@ -70,7 +70,7 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player):
-        if player.buying_points is not None and player.buying_points < -20:
+        if player.buying_points is not None and player.buying_points < -10:
             return True
         return False
 
@@ -84,7 +84,7 @@ class Market:
     def calculate_bid_price(self, player):
         player_millions_value = int(player.price/1000000)
         expensive_corrector_factor = 1-player_millions_value*0.015
-        bid_percentage_to_multiply = float(interp(player.buying_points, [0, 10, 25, 75, 100], [0, 1.05, 1.10, 1.15, 1.20]))*expensive_corrector_factor
+        bid_percentage_to_multiply = float(interp(player.buying_points, [0, 10, 25, 75, 100], [1, 1.05, 1.10, 1.15, 1.20]))*expensive_corrector_factor
         return int(player.price*bid_percentage_to_multiply)
 
     def accept_offer(self, offer_id):
