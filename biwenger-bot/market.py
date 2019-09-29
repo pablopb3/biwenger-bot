@@ -29,17 +29,18 @@ class Market:
         self.buying_aggressivity = self.calculate_buying_aggressivity()
         self.selling_aggressivity = 10 - self.buying_aggressivity
         self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity * 500000
-        self.min_buying_points_to_bid = 15 - self.buying_aggressivity * 8 / 10
-        self.percentage_to_set_bid_price = 0.2 + self.buying_aggressivity / 10
-        self.percentage_to_accept_offer = 0.88 + self.selling_aggressivity * 0.04 / 10
-        self.team_points_mean = round(mean([p.points_mean for p in self.my_squad]), 4)
-        self.team_points_mean_per_million = round(mean([p.points_mean_per_million for p in self.my_squad]), 4)
+        self.min_market_points_to_bid = 20 - self.buying_aggressivity
+        self.min_market_points_to_sell = -25 + self.selling_aggressivity
+        self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.005
+        self.team_points_mean_by_player = round(mean([p.points_mean for p in self.my_squad]), 4)
+        self.team_points_by_player = round(mean([p.points for p in self.my_squad]), 4)
+        self.normalized_team_points_mean_per_million = round(mean([p.points_mean_per_million*(1.4**int(p.price/1000000)) for p in self.my_squad]), 4)
 
     def place_offers_for_players_in_market(self):
         for player_in_market in self.players_in_market_from_computer:
             print("studying to make a bid for " + player_in_market.name)
             predicted_price = self.prices_predictor.predict_price(player_in_market)
-            player_in_market.buying_points = self.get_buying_points(player_in_market, predicted_price)
+            player_in_market.market_points = self.get_market_points(player_in_market, predicted_price)
             if self.should_place_offer(player_in_market):
                 bid_price = self.calculate_bid_price(player_in_market)
                 if self.do_i_have_money_to_bid(bid_price):
@@ -57,7 +58,7 @@ class Market:
                 if not self.is_min_players_by_pos_guaranteed(player):
                     continue
                 prediction_price = self.prices_predictor.predict_price(player)
-                player.buying_points = self.get_buying_points(player, prediction_price)
+                player.market_points = self.get_market_points(player, prediction_price)
                 offer_price = received_offer["ammount"]
                 if self.should_accept_offer(player):
                     print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
@@ -70,22 +71,22 @@ class Market:
         self.cli.do_post("sendPlayersToMarket", place_players_to_market)
 
     def should_accept_offer(self, player):
-        if player.buying_points is not None and player.buying_points < -10:
+        if player.market_points is not None and player.market_points < self.min_market_points_to_sell:
             return True
         return False
 
     def should_place_offer(self, player):
         return \
             player.status == "ok" and \
-            player.buying_points is not None and \
-            player.buying_points > self.min_buying_points_to_bid and \
+            player.market_points is not None and \
+            player.market_points > self.min_market_points_to_bid and \
             player.price < self.max_player_price_to_bid_for
 
     def calculate_bid_price(self, player):
         player_millions_value = int(player.price/1000000)
         expensive_corrector_factor = 1-player_millions_value*0.015
-        bid_percentage_to_multiply = float(interp(player.buying_points, [0, 10, 25, 75, 100], [1, 1.05, 1.10, 1.15, 1.20]))*expensive_corrector_factor
-        return int(player.price*bid_percentage_to_multiply)
+        bid_percentage_to_multiply = float(interp(player.market_points, [0, 10, 25, 75, 100], [1, 1.05, 1.10, 1.15, 1.20]))*expensive_corrector_factor
+        return int(player.price*bid_percentage_to_multiply*self.aggresivity_percentage_to_add_to_bid)
 
     def accept_offer(self, offer_id):
         return self.cli.do_get("acceptReceivedOffer?id=" + str(offer_id))["data"]
@@ -106,30 +107,28 @@ class Market:
         return True
 
     def calculate_buying_aggressivity(self):
-        buy_aggr_by_money = self.available_money / MAX_MONEY_AT_BANK * 10
-        buy_aggr_by_days = round(math.cos(4 * self.days_to_next_round / (2 * math.pi)), 2)
-        if self.days_to_next_round > 10:
-            buy_aggr_by_days = 1
-        buy_aggr = round(buy_aggr_by_money + buy_aggr_by_days)
-        return buy_aggr
+        return min(self.available_money / MAX_MONEY_AT_BANK * 10, 10)
 
-    def get_buying_points(self, player: Player, predicted_price):
-        diff_price_weight = 0.65
-        diff_points_mean_weight = 0.2
-        diff_points_per_million_weight = 0.15
+    def get_market_points(self, player: Player, predicted_price):
+        diff_price_weight = 0.6
+        diff_points_weight = 0.25
+        diff_points_mean_weight = 0.1
+        diff_points_per_million_weight = 0.05
         percentage_diff = (predicted_price - player.price) / player.price * 100
         normalized_diff = min(max(((percentage_diff) ** 3) / 25, -100), 100)
 
         player_millions_value = int(player.price/1000000)
-        normalized_points_per_million = float(interp(player.points_mean_per_million*(1.25**player_millions_value), [0, self.team_points_mean_per_million, 10], [-100, 0, 100]))
+        normalized_points_per_million = float(interp(player.points_mean_per_million*(1.4**player_millions_value), [0, self.normalized_team_points_mean_per_million, 10], [-100, 0, 100]))
 
-        normalized_points_mean = float(interp(player.points_mean, [0, self.team_points_mean, 10], [-100, 0, 100]))
+        normalized_points = float(interp(player.points/self.team_points_by_player, [0, 1, 10], [-100, 0, 100]))
+        normalized_points_mean = float(interp(player.points_mean, [0, self.team_points_mean_by_player, 10], [-100, 0, 100]))
 
-        buying_points = round(diff_price_weight * normalized_diff + \
+        market_points = round(diff_price_weight * normalized_diff + \
                diff_points_per_million_weight * normalized_points_per_million + \
+               diff_points_weight * normalized_points + \
                diff_points_mean_weight * normalized_points_mean, 4)
-        print("buying points for " + player.name + ": " + str(buying_points))
-        return buying_points
+        print("market_points for " + player.name + ": " + str(market_points))
+        return market_points
 
     def get_days_to_next_round(self):
         return self.cli.do_get("getDaysToNextRound")["data"]

@@ -32,8 +32,7 @@ class Player:
         self.points_mean_per_million = round(self.points_mean/self.price*1000000, 4)
 
         self.lineup_points = Player.get_lineup_points_for_player(self)
-        self.buying_points = None
-        self.selling_points = None
+        self.market_points = None
 
 
     def __str__(self):
