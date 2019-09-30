@@ -31,8 +31,9 @@ class Market:
         self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity * 500000
         self.min_market_points_to_bid = 20 - self.buying_aggressivity
         self.min_market_points_to_sell = -25 + self.selling_aggressivity
-        self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.005
+        self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.007
         self.team_points_mean_by_player = round(mean([p.points_mean for p in self.my_squad]), 4)
+        self.team_points_fitness_by_player = round(mean([p.points_fitness for p in self.my_squad]), 4)
         self.team_points_by_player = round(mean([p.points for p in self.my_squad]), 4)
         self.normalized_team_points_mean_per_million = round(mean([p.points_mean_per_million*(1.4**int(p.price/1000000)) for p in self.my_squad]), 4)
 
@@ -110,8 +111,9 @@ class Market:
         return min(self.available_money / MAX_MONEY_AT_BANK * 10, 10)
 
     def get_market_points(self, player: Player, predicted_price):
-        diff_price_weight = 0.6
-        diff_points_weight = 0.25
+        diff_price_weight = 0.45
+        diff_points_fitness_weight = 0.25
+        diff_points_total_weight = 0.15
         diff_points_mean_weight = 0.1
         diff_points_per_million_weight = 0.05
         percentage_diff = (predicted_price - player.price) / player.price * 100
@@ -120,12 +122,15 @@ class Market:
         player_millions_value = int(player.price/1000000)
         normalized_points_per_million = float(interp(player.points_mean_per_million*(1.4**player_millions_value), [0, self.normalized_team_points_mean_per_million, 10], [-100, 0, 100]))
 
-        normalized_points = float(interp(player.points/self.team_points_by_player, [0, 1, 10], [-100, 0, 100]))
+        normalized_points_fitness = float(interp(player.points_fitness/self.team_points_fitness_by_player, [0, 1, 3], [-100, 0, 100]))
+        normalized_points_total = float(interp(player.points/self.team_points_by_player, [0, 1, 3], [-100, 0, 100]))
         normalized_points_mean = float(interp(player.points_mean, [0, self.team_points_mean_by_player, 10], [-100, 0, 100]))
 
-        market_points = round(diff_price_weight * normalized_diff + \
+        market_points = round(
+               diff_price_weight * normalized_diff + \
+               diff_points_fitness_weight * normalized_points_fitness + \
                diff_points_per_million_weight * normalized_points_per_million + \
-               diff_points_weight * normalized_points + \
+               diff_points_total_weight * normalized_points_total + \
                diff_points_mean_weight * normalized_points_mean, 4)
         print("market_points for " + player.name + ": " + str(market_points))
         return market_points

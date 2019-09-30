@@ -1,5 +1,7 @@
-WEIGHT_MARKET_VALUE = 0.3
-WEIGHT_POINTS = 0.5
+WEIGHT_MARKET_VALUE = 0.25
+WEIGHT_POINTS_FITNESS = 0.35
+WEIGHT_POINTS_TOTAL = 0.15
+WEIGHT_POINTS_MEAN = 0.05
 WEIGHT_POINTS_HOME_AWAY = 0.1
 WEIGHT_POINTS_LAST_SEASON = 0.1
 
@@ -23,6 +25,7 @@ class Player:
         self.played_away = data["data"]["data"]["playedAway"]
         self.points_home = data["data"]["data"]["pointsHome"]
         self.points_away = data["data"]["data"]["pointsAway"]
+        self.fitness = [0 if v is None else v for v in data["data"]["data"]["fitness"]]
 
         self.next_match_home = Player.is_next_match_home(data["data"]["data"])
         self.played_matches = self.played_home + self.played_away
@@ -30,7 +33,9 @@ class Player:
         self.points_mean_home = self.points_home/self.played_home if self.played_home > 0 else 0
         self.points_mean_away = self.points_away/self.played_away if self.played_away > 0 else 0
         self.points_mean_per_million = round(self.points_mean/self.price*1000000, 4)
+        self.points_fitness = Player.get_ponderated_fitness_points(self)
 
+        self.rounds_played = data["data"]["data"]["reports"].__len__() # current round, no matter how many matches the player played
         self.lineup_points = Player.get_lineup_points_for_player(self)
         self.market_points = None
 
@@ -76,12 +81,16 @@ class Player:
     @staticmethod
     def get_lineup_points_player_ok(player):
         normalized_price = Player.normalize_price(player.price)
-        normalized_points = Player.normalize_points_mean(player.points_mean)
+        normalized_points_fitness = Player.normalize_points_mean(player.points_fitness)
+        normalized_points_total = Player.normalize_points_season(player)
+        normalized_points_mean = Player.normalize_points_mean(player.points_mean)
         normalized_points_home_away = Player.get_normalized_points_home_away(player)
         normalized_points_last_season = Player.normalize_points(player.points_last_season)
         return round(
             WEIGHT_MARKET_VALUE * normalized_price +
-            WEIGHT_POINTS * normalized_points +
+            WEIGHT_POINTS_FITNESS * normalized_points_fitness +
+            WEIGHT_POINTS_TOTAL * normalized_points_total +
+            WEIGHT_POINTS_MEAN * normalized_points_mean +
             WEIGHT_POINTS_HOME_AWAY * normalized_points_home_away +
             WEIGHT_POINTS_LAST_SEASON * normalized_points_last_season
             , 4)
@@ -93,6 +102,10 @@ class Player:
     @staticmethod
     def normalize_points(points):
         return min(points / MAX_POINTS_LAST_SEASON, 1)
+
+    @staticmethod
+    def normalize_points_season(player):
+        return min(player.points / (MAX_POINTS_MEAN_LAST_SEASON * player.rounds_played), 1)
 
     @staticmethod
     def normalize_points_home_away(points_home_away):
@@ -108,4 +121,10 @@ class Player:
         if player.next_match_home:
             normalized_points_home_away = normalized_points_home_away*1.15
         return normalized_points_home_away
+
+    def get_ponderated_fitness_points(self):
+        weights = [3, 5, 7, 8, 10]
+        return sum(self.fitness[g] * weights[g] for g in range(len(self.fitness))) / sum(weights)
+
+
 
