@@ -29,8 +29,8 @@ class Market:
         self.buying_aggressivity = self.calculate_buying_aggressivity()
         self.selling_aggressivity = 10 - self.buying_aggressivity
         self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity * 500000
-        self.min_market_points_to_bid = 20 - self.buying_aggressivity
-        self.min_market_points_to_sell = -25 + self.selling_aggressivity
+        self.min_market_points_to_bid = 10 - self.buying_aggressivity*0.7
+        self.min_market_points_to_sell = -40 + self.selling_aggressivity*2
         self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.007
         self.team_points_mean_by_player = round(mean([p.points_mean for p in self.my_squad]), 4)
         self.team_points_fitness_by_player = round(mean([p.points_fitness for p in self.my_squad]), 4)
@@ -48,7 +48,6 @@ class Market:
                     print("decided to make a bid for " + player_in_market.name + " for " + str(bid_price) + "$")
                     self.place_offer(player_in_market.id, bid_price)
                     self.my_players_by_pos = self.line_up.get_players_by_pos(self.my_squad)
-
 
     def study_offers_for_my_players(self):
         if self.received_offers_from_computer:
@@ -85,9 +84,10 @@ class Market:
 
     def calculate_bid_price(self, player):
         player_millions_value = int(player.price/1000000)
-        expensive_corrector_factor = 1-player_millions_value*0.015
-        bid_percentage_to_multiply = float(interp(player.market_points, [0, 10, 25, 75, 100], [1, 1.05, 1.10, 1.15, 1.20]))*expensive_corrector_factor
-        return int(player.price*bid_percentage_to_multiply*self.aggresivity_percentage_to_add_to_bid)
+        expensive_corrector_factor = 1-player_millions_value*0.01
+        bid_percentage_to_multiply = float(interp(player.market_points, [0, 10, 25, 75, 100], [1, 1.05, 1.10, 1.20, 1.30]))*expensive_corrector_factor
+        bid_price = player.price*bid_percentage_to_multiply*self.aggresivity_percentage_to_add_to_bid
+        return int(max(bid_price, player.price))
 
     def accept_offer(self, offer_id):
         return self.cli.do_get("acceptReceivedOffer?id=" + str(offer_id))["data"]
