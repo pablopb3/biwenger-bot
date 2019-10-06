@@ -108,7 +108,9 @@ class Market:
         return True
 
     def calculate_buying_aggressivity(self):
-        return min(self.available_money / MAX_MONEY_AT_BANK * 10, 10)
+        money_aggressivity = self.available_money / MAX_MONEY_AT_BANK * 10
+        dates_aggressivity = self.days_to_next_round*0.15
+        return min(max(money_aggressivity+dates_aggressivity, 0), 10)
 
     def get_market_points(self, player: Player, predicted_price):
         diff_price_weight = 0.45
@@ -147,7 +149,7 @@ class Market:
             return [x for x in received_offers if x["idUser"] == 0]
 
     def do_i_have_money_to_bid(self, bid_price):
-        return self.available_money - self.bided_today - bid_price > 0
+        return self.available_money - self.bided_today - bid_price > -1000000*self.days_to_next_round
 
     def get_players_ids_from_players_in_market_from_computer(self):
         return [p['idPlayer'] for p in self.get_players_in_market_from_computer_with_price()]
