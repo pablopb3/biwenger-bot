@@ -38,7 +38,7 @@ class Player:
         self.rounds_played = data["data"]["data"]["reports"].__len__() # current round, no matter how many matches the player played
         self.lineup_points = Player.get_lineup_points_for_player(self)
         self.market_points = None
-
+        self.assure_points = None
 
     def __str__(self):
         return self.name

@@ -52,6 +52,9 @@ class LineUp:
     def order_players_by_lineup_points(self, players):
         return players.sort(key=lambda x: x.lineup_points, reverse=True)
 
+    def order_players_by_assure_points(self, players):
+        return players.sort(key=lambda x: x.assure_points, reverse=True)
+
     def order_players_by_position(self, players):
         return players.sort(key=lambda x: x.position)
 

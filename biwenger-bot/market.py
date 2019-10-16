@@ -7,6 +7,8 @@ from lineup import MIN_PLAYERS_BY_POS
 
 MAX_MONEY_AT_BANK = 20000000
 
+WEIGHT_ASSURE_MONEY = 0.5
+WEIGHT_ASSURE_POINTS = 0.5
 
 class Market:
 
@@ -55,16 +57,15 @@ class Market:
                 player_id = received_offer["idPlayer"]
                 player = Player.get_player_from_player_id(self.cli, player_id)
                 print("studying to accept offer for " + player.name)
-                if not self.is_min_players_by_pos_guaranteed(player):
-                    continue
                 prediction_price = self.prices_predictor.predict_price(player)
                 player.market_points = self.get_market_points(player, prediction_price)
                 offer_price = received_offer["ammount"]
+                if not self.is_min_players_by_pos_guaranteed(player):
+                    continue
                 if self.should_accept_offer(player):
                     print("decided to accept offer for  " + player.name + " for " + str(offer_price) + "$")
                     self.accept_offer(received_offer["idOffer"])
                     self.my_players_by_pos = self.line_up.get_players_by_pos(self.my_squad)
-
 
     def place_all_my_players_to_market(self, price):
         place_players_to_market = PlacePlayersToMarket(price)
@@ -106,6 +107,32 @@ class Market:
                   "At least " + str(min_players_in_this_pos) + " are required. ")
             return False
         return True
+
+    def assure_positive_balance_before_next_round(self):
+        while self.get_my_money() < 0 and self.days_to_next_round <= 1:
+            for p in self.my_squad:
+                prediction_price = self.prices_predictor.predict_price(p)
+                market_points = self.get_market_points(p, prediction_price)
+                self.set_assure_points(p, market_points, self.get_my_money())
+            self.line_up.order_players_by_assure_points(self.my_squad)
+
+            sold = False
+            i = 0
+            while not sold:
+                candidate_player_to_sell = self.my_squad[i]
+                if not self.is_min_players_by_pos_guaranteed(candidate_player_to_sell):
+                    i = i+1
+                else:
+                    sold = True
+
+            offer_to_accept = [o for o in self.received_offers_from_computer if o["idPlayer"] == candidate_player_to_sell.id][0]
+            print("decided to accept offer for  " + candidate_player_to_sell.name + "for " + str(offer_to_accept["ammount"]) + " so we can get a positive balance!")
+            self.accept_offer(offer_to_accept["idOffer"])
+            self.my_squad = self.line_up.get_my_players()
+            self.my_players_by_pos = self.line_up.get_players_by_pos(self.my_squad)
+        print("Already have a positive balance!")
+
+
 
     def calculate_buying_aggressivity(self):
         money_aggressivity = self.available_money / MAX_MONEY_AT_BANK * 10
@@ -169,6 +196,11 @@ class Market:
     def get_market_evolution(self):
         return self.cli.do_get("getMarketEvolution")["data"]
 
+    def set_assure_points(self, player, market_points, money_to_balance):
+        normalized_price_over_total_debt = min(abs(player.price / money_to_balance), 1)
+        assure_points = WEIGHT_ASSURE_MONEY*normalized_price_over_total_debt + WEIGHT_ASSURE_POINTS*-market_points
+        print(player.name + " assure points : " + str(assure_points))
+        player.assure_points = assure_points
 
 class PlacePlayersToMarket:
 

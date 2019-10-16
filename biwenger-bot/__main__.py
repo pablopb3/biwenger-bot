@@ -37,6 +37,10 @@ def main():
     market.place_offers_for_players_in_market()
     print("======== Offers placed to players in market ========")
 
+    print("======== Assure positive balance before start of next round")
+    market.assure_positive_balance_before_next_round()
+    print("======== Assured positive balance before start of next round")
+
     print("======== ======== MARKET BUSINESS ENDED ======== ========")
 
     print("======== ======== LINEUP BUSINESS STARTED ======== ========")
