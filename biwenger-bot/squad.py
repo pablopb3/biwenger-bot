@@ -22,17 +22,20 @@ ALL_POSSIBLE_FORMATIONS = [
 MIN_PLAYERS_BY_POS = [1, 5, 4, 2]
 
 
-class LineUp:
+class Squad:
 
-    def __init__(self, formation=None, player_ids=None):
-        self.formation = formation
-        self.player_ids = player_ids
+    def __init__(self, cli, formation=None, player_ids=None):
+        self.players
+        self.line_up
 
-    def set_best_lineup(self):
-        lineup = self.get_best_lineup()
-        return self.set_lineup(lineup.formation, lineup.player_ids)
+        self.team_points_mean_by_player = round(mean([p.points_mean for p in self.my_squad]), 4)
+        self.team_points_fitness_by_player = round(mean([p.points_fitness for p in self.my_squad]), 4)
+        self.team_points_by_player = round(mean([p.points for p in self.my_squad]), 4)
+        self.normalized_team_points_mean_per_million = round(mean([p.points_mean_per_million*(1.4**int(p.price/1000000)) for p in self.my_squad]), 4)
 
-    def get_my_players(self):
+
+
+def get_my_players(self):
         player_ids = self.cli.get_my_player_ids()
         return Player.get_players_from_player_ids(self.cli, player_ids)
 

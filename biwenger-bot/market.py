@@ -13,31 +13,19 @@ WEIGHT_ASSURE_POINTS = 0.5
 class Market:
 
     def __init__(self, cli, line_up):
-        self.cli = cli
-        self.line_up = line_up
-        self.prices_predictor = PricesPredictor()
-        self.my_squad = self.line_up.get_my_players()
-        self.my_players_by_pos = line_up.get_players_by_pos(self.my_squad)
-        self.min_players_by_pos = MIN_PLAYERS_BY_POS
-        self.received_offers_from_computer = self.get_received_offers_from_computer()
-        self.days_to_next_round = self.get_days_to_next_round()
-        self.players_in_market_from_computer = Player.get_players_from_player_ids(
-            self.cli, self.get_players_ids_from_players_in_market_from_computer()
-        )
-        self.available_money = self.get_my_money()
-        self.max_bid = self.get_max_bid()
-        self.market_evolution = self.get_market_evolution()
-        self.bided_today = 0
-        self.buying_aggressivity = self.calculate_buying_aggressivity()
-        self.selling_aggressivity = 10 - self.buying_aggressivity
-        self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity * 500000
-        self.min_market_points_to_bid = 10 - self.buying_aggressivity*0.7
-        self.min_market_points_to_sell = -40 + self.selling_aggressivity*2
-        self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.007
-        self.team_points_mean_by_player = round(mean([p.points_mean for p in self.my_squad]), 4)
-        self.team_points_fitness_by_player = round(mean([p.points_fitness for p in self.my_squad]), 4)
-        self.team_points_by_player = round(mean([p.points for p in self.my_squad]), 4)
-        self.normalized_team_points_mean_per_million = round(mean([p.points_mean_per_million*(1.4**int(p.price/1000000)) for p in self.my_squad]), 4)
+        self.squad
+        self.players_in_market
+        self.offers (all offers)
+        self.config
+            (days to next round...) available_money, max_bid market_evolution, bided_today
+        bot_config
+            self.buying_aggressivity = self.calculate_buying_aggressivity()
+            self.selling_aggressivity = 10 - self.buying_aggressivity
+            self.max_player_price_to_bid_for = 5000000 + self.buying_aggressivity * 500000
+            self.min_market_points_to_bid = 10 - self.buying_aggressivity*0.7
+            self.min_market_points_to_sell = -40 + self.selling_aggressivity*2
+            self.aggresivity_percentage_to_add_to_bid = 1 + self.buying_aggressivity * 0.007
+
 
     def place_offers_for_players_in_market(self):
         for player_in_market in self.players_in_market_from_computer:
@@ -69,7 +57,7 @@ class Market:
 
     def place_all_my_players_to_market(self, price):
         place_players_to_market = PlacePlayersToMarket(price)
-        self.cli.do_post("sendPlayersToMarket", place_players_to_market)
+        self.cli.send_players_to_market(place_players_to_market)
 
     def should_accept_offer(self, player):
         if player.market_points is not None and player.market_points < self.min_market_points_to_sell:
@@ -91,11 +79,11 @@ class Market:
         return int(max(bid_price, player.price))
 
     def accept_offer(self, offer_id):
-        return self.cli.do_get("acceptReceivedOffer?id=" + str(offer_id))["data"]
+        return self.cli.accept_offer(offer_id)
 
     def place_offer(self, player_id, bid_price):
         offer = PlaceOffer(bid_price, [player_id], None, "purchase")
-        self.cli.do_post("placeOffer", offer)["data"]
+        self.cli.place_offer(offer)
         self.bided_today += bid_price
 
     def is_min_players_by_pos_guaranteed(self, player: Player):
@@ -165,10 +153,10 @@ class Market:
         return market_points
 
     def get_days_to_next_round(self):
-        return self.cli.do_get("getDaysToNextRound")["data"]
+        return self.cli.get_days_to_next_round()
 
     def get_received_offers(self):
-        return self.cli.do_get("getReceivedOffers")["data"]
+        return self.cli.get_received_offers()
 
     def get_received_offers_from_computer(self):
         received_offers = self.get_received_offers()
@@ -182,19 +170,19 @@ class Market:
         return [p['idPlayer'] for p in self.get_players_in_market_from_computer_with_price()]
 
     def get_players_in_market_with_price(self):
-        return self.cli.do_get("getPlayersInMarket")["data"]
+        return self.cli.get_players_in_market()
 
     def get_players_in_market_from_computer_with_price(self):
         return [p for p in self.get_players_in_market_with_price() if p["idUser"] == 0]
 
     def get_my_money(self):
-        return self.cli.do_get("getMyMoney")["data"]
+        return self.cli.get_my_money()
 
     def get_max_bid(self):
-        return self.cli.do_get("getMaxBid")["data"]
+        return self.cli.get_max_bid()
 
     def get_market_evolution(self):
-        return self.cli.do_get("getMarketEvolution")["data"]
+        return self.cli.get_market_evolution()
 
     def set_assure_points(self, player, market_points, money_to_balance):
         normalized_price_over_total_debt = min(abs(player.price / money_to_balance), 1)

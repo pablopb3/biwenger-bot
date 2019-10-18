@@ -1,25 +1,23 @@
+from ApiClientCaller import ApiClientCaller
 from login import Login
 from market import Market
 from lineup import LineUp
 from lineup import FORMATION_442
 from config import Config
-from biwengerApiClient import BiwengerApiClient
 from prices_predictor import PricesPredictor
 from player import Player
 import datetime
 
+
 def main():
     print("~~~~~~~~~~~ STARTING EXECUTION FOR DAY " + get_formated_time() + "~~~~~~~~~~~")
-    config = Config()
-    wave(config)
-    cli = do_login(config)
+
+    cli = ApiClientCaller()
+
+    wave()
     wave_api(cli)
 
-    print("======== ======== CONFIG BUSINESS STARTED ======== ========")
-    print("======== Getting all alias information from players in league ========")
-    config.update_players_alias(cli)
-    print("======== All alias information from players got ========")
-    print("======== ======== CONFIG BUSINESS ENDED ======== ========")
+    Config.update_db(cli)
 
     print("======== ======== MARKET BUSINESS STARTED ======== ========")
     line_up = LineUp(cli)
@@ -54,22 +52,19 @@ def main():
     print("======== ======== LINEUP BUSINESS ENDED ======== ========")
     print("~~~~~~~~~~~ ENDED EXECUTION FOR DAY " + get_formated_time() + "~~~~~~~~~~~")
 
-def wave_api(cli):
-    cli.do_get("")
+
+def wave():
+    config = Config()
+    print(config.wave())
 
 
-def wave(config):
-    print(config.get_param('Wave', 'init.message'))
+def wave_api(cli: ApiClientCaller):
+    print(cli.wave())
 
-
-def do_login(config):
-    return BiwengerApiClient(
-        config.get_param('Credentials', 'biwenger.mail'),
-        config.get_param('Credentials', 'biwenger.pass'),
-    )
 
 def get_formated_time():
     return datetime.datetime.now().strftime('%d-%b-%G at %H:%M:%S')
+
 
 if __name__ == '__main__':
     main()

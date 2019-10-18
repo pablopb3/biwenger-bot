@@ -26,8 +26,8 @@ class Player:
         self.points_home = data["data"]["data"]["pointsHome"]
         self.points_away = data["data"]["data"]["pointsAway"]
         self.fitness = [0 if v is None else v for v in data["data"]["data"]["fitness"]]
-
         self.next_match_home = Player.is_next_match_home(data["data"]["data"])
+
         self.played_matches = self.played_home + self.played_away
         self.points_mean = self.get_points_mean(self.points, self.played_matches)
         self.points_mean_home = self.points_home/self.played_home if self.played_home > 0 else 0
@@ -35,7 +35,7 @@ class Player:
         self.points_mean_per_million = round(self.points_mean/self.price*1000000, 4)
         self.points_fitness = Player.get_ponderated_fitness_points(self)
 
-        self.rounds_played = data["data"]["data"]["reports"].__len__() # current round, no matter how many matches the player played
+        self.rounds_disputed = data["data"]["data"]["reports"].__len__() # current round, no matter how many matches the player played
         self.lineup_points = Player.get_lineup_points_for_player(self)
         self.market_points = None
         self.assure_points = None
@@ -60,7 +60,7 @@ class Player:
 
     @staticmethod
     def get_player_from_player_id(cli, player_id):
-        return Player(cli.do_get("getPlayerById", {"id": player_id}))
+        return Player(cli.get_player(player_id))
 
     @staticmethod
     def is_next_match_home(data):
