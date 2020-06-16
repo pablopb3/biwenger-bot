@@ -20,7 +20,7 @@ class Market:
         self.my_players_by_pos = line_up.get_players_by_pos(self.my_squad)
         self.min_players_by_pos = MIN_PLAYERS_BY_POS
         self.received_offers_from_computer = self.get_received_offers_from_computer()
-        self.days_to_next_round = self.get_days_to_next_round()
+        self.days_to_next_round = 0 # this was broken : self.get_days_to_next_round()
         self.players_in_market_from_computer = Player.get_players_from_player_ids(
             self.cli, self.get_players_ids_from_players_in_market_from_computer()
         )
